@@ -1,5 +1,6 @@
 import com.example.SimpleDTUPay;
 import com.example.SimpleDTUPayService;
+import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
@@ -73,5 +74,30 @@ public class PaymentStepDef {
     @Then("an error message is returned saying {string}")
     public void an_error_message_is_returned_saying(String string) {
         assertEquals(string, errorMessageHolder.getErrorMessage());
+    }
+
+    @Given("a customer with a bank account with balance {int}")
+    public void aCustomerWithABankAccountWithBalance(int arg0) {
+
+    }
+
+    @And("that the customer is registered with DTU Pay")
+    public void thatTheCustomerIsRegisteredWithDTUPay() {
+    }
+
+    @Given("a merchant with a bank account with balance {int}")
+    public void aMerchantWithABankAccountWithBalance(int arg0) {
+    }
+
+    @And("that the merchant is registered with DTU Pay")
+    public void thatTheMerchantIsRegisteredWithDTUPay() {
+    }
+
+    @And("the balance of the customer at the bank is {int} kr")
+    public void theBalanceOfTheCustomerAtTheBankIsKr(int arg0) {
+    }
+
+    @And("the balance of the merchant at the bank is {int} kr")
+    public void theBalanceOfTheMerchantAtTheBankIsKr(int arg0) {
     }
 }
