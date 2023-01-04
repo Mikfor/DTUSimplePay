@@ -1,3 +1,4 @@
+import com.example.BankAccount;
 import com.example.SimpleDTUPay;
 import com.example.SimpleDTUPayService;
 import io.cucumber.java.en.And;
@@ -16,6 +17,9 @@ public class PaymentStepDef {
     HashMap<Integer, SimpleDTUPay> transactions;
     boolean successful;
     private ErrorMessageHolder errorMessageHolder = new ErrorMessageHolder();
+
+    private BankAccount customerAccount = new BankAccount();
+    private BankAccount merchantAccount = new BankAccount();
 
 
     @Given("a customer with id {string}")
@@ -78,7 +82,7 @@ public class PaymentStepDef {
 
     @Given("a customer with a bank account with balance {int}")
     public void aCustomerWithABankAccountWithBalance(int arg0) {
-
+        customerAccount.setBalance(arg0);
     }
 
     @And("that the customer is registered with DTU Pay")

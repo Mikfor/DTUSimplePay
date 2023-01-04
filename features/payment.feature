@@ -18,7 +18,7 @@ Feature: Payment
     Then the payment is not successful
     And an error message is returned saying "customer with id cid2 is unknown"
 
-  Scenario: Successful Payment
+  Scenario: Successful Account Payment
     Given a customer with a bank account with balance 1000
     And that the customer is registered with DTU Pay
     Given a merchant with a bank account with balance 2000
