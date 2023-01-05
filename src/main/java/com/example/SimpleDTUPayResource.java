@@ -4,6 +4,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.HashMap;
 
+/*
 @Path(("/simpleDTUPay"))
 public class SimpleDTUPayResource {
 
@@ -23,14 +24,6 @@ public class SimpleDTUPayResource {
     }
 
 
-    //TODO address this inside of the service object
-   /* @POST
-    @Produces(MediaType.APPLICATION_JSON)
-    @Consumes(MediaType.APPLICATION_XML)
-    public boolean transactionXML(SimpleDTUPay simpleDTUPay) {
-        return simpleDTUPayService.transaction(simpleDTUPay.getAmount(), simpleDTUPay.getCid(), simpleDTUPay.getMid());
-    }*/
-
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public HashMap<Integer, SimpleDTUPay> getTransactionsJSON() {
@@ -43,3 +36,4 @@ public class SimpleDTUPayResource {
         return simpleDTUPayService.getTransactions();
     }
 }
+*/
