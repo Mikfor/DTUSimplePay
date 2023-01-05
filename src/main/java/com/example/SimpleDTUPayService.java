@@ -30,6 +30,21 @@ public class SimpleDTUPayService {
     }
 
 
+    public boolean getRegistrationCustomer(String cprNumber) {
+        for (SimpleDTUPay transaction : transactions.values()) {
+            if (transaction.getCid().equals(cprNumber)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-
+    public boolean getRegistrationMerchant(String cprNumber) {
+        for (SimpleDTUPay transaction : transactions.values()) {
+            if (transaction.getMid().equals(cprNumber)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
