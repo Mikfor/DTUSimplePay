@@ -25,16 +25,17 @@ public class PaymentStepDef {
     @Given("a customer with id {string}")
     public void a_customer_with_id(String cid) {
         this.cid = cid;
-
+        assertNotNull(this.cid);
     }
-    @Given("a merchant with id {string}")
+    @And("a merchant with id {string}")
     public void a_merchant_with_id(String mid) {
         this.mid = mid;
+        assertNotNull(this.mid);
     }
 
     @When("the merchant initiates a payment for {int} kr by the customer")
     public void the_merchant_initiates_a_payment_for_kr_by_the_customer(Integer amount) {
-        successful = dtupayService.transaction(amount, cid, mid);
+        successful = dtupayService.transaction(amount, this.cid, this.mid);
     }
 
     @Then("the payment is successful")
@@ -65,7 +66,7 @@ public class PaymentStepDef {
     @When("the merchant initiates a payment for {string} kr by the customer")
     public void the_merchant_initiates_a_payment_for_kr_by_the_customer(String string) {
         try {
-            successful = dtupayService.transaction(Integer.parseInt(string), mid, cid);
+            successful = dtupayService.transaction(Integer.parseInt(string), this.mid, this.cid);
         } catch (Exception e) {
             errorMessageHolder.setErrorMessage(e.getMessage());
         }
