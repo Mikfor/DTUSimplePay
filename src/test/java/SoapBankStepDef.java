@@ -1,5 +1,5 @@
-import com.example.FastMoneyUser;
 import com.example.SimpleDTUPayService;
+import com.example.SimpleDTUPayUser;
 import dtu.ws.fastmoney.*;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
@@ -10,6 +10,7 @@ import io.cucumber.java.en.When;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -17,8 +18,11 @@ public class SoapBankStepDef {
     private List<AccountInfo> customers;
     private BankService bankService = new BankServiceService().getBankServicePort();
     private SimpleDTUPayService simpleDTUPayService = new SimpleDTUPayService();
-    private AccountInfo customerBankAccount = new AccountInfo();
-    private AccountInfo merchantBankAccount = new AccountInfo();
+//    private AccountInfo customerBankAccount = new AccountInfo();
+//    private AccountInfo merchantBankAccount = new AccountInfo();
+    private SimpleDTUPayUser customerBankAccount = new SimpleDTUPayUser();
+    private SimpleDTUPayUser merchantBankAccount = new SimpleDTUPayUser();
+
 
     private boolean customerRegistered;
     private boolean merchantRegistered;
@@ -31,18 +35,15 @@ public class SoapBankStepDef {
 //        } catch (BankServiceException_Exception e) {
 //            throw new RuntimeException(e);
 //        }
-        customerBankAccount.setUser(new User());
-        customerBankAccount.getUser().setFirstName("John");
-        customerBankAccount.getUser().setLastName("Doe");
-        customerBankAccount.getUser().setCprNumber("123456-7890");
+        customerBankAccount.setFirstName("John");
+        customerBankAccount.setLastName("Doe");
+        customerBankAccount.setCprNumber("123456-7890");
         // TODO: ENABLE THIS FEATURE
 //        customerBankAccount.setRole("customer");
 
-        merchantBankAccount.setUser(new User());
-        merchantBankAccount.getUser().setFirstName("Jane");
-        merchantBankAccount.getUser().setLastName("Doe");
-        merchantBankAccount.getUser().setCprNumber("123456-7891");
-//        merchantBankAccount.setRole("merchant");
+        merchantBankAccount.setFirstName("Jane");
+        merchantBankAccount.setLastName("Doe");
+        merchantBankAccount.setCprNumber("123456-7891");
     }
 
     @After
@@ -50,14 +51,14 @@ public class SoapBankStepDef {
         // TODO: Might be a better way to cleanup our created accounts, BUT TOO BAD
         var customers = bankService.getAccounts();
         for (var user : customers) {
-            if (user.getUser().getCprNumber().equals(customerBankAccount.getUser().getCprNumber()) && user.getUser().getFirstName().equals(customerBankAccount.getUser().getFirstName()) && user.getUser().getLastName().equals(customerBankAccount.getUser().getLastName())) {
+            if (user.getUser().getCprNumber().equals(customerBankAccount.getCprNumber()) && user.getUser().getFirstName().equals(customerBankAccount.getFirstName()) && user.getUser().getLastName().equals(customerBankAccount.getLastName())) {
                 try {
                     bankService.retireAccount(user.getAccountId());
                 } catch (BankServiceException_Exception e) {
                     throw new RuntimeException(e);
                 }
             }
-            if (user.getUser().getCprNumber().equals(merchantBankAccount.getUser().getCprNumber()) && user.getUser().getFirstName().equals(merchantBankAccount.getUser().getFirstName()) && user.getUser().getLastName().equals(merchantBankAccount.getUser().getLastName())) {
+            if (user.getUser().getCprNumber().equals(merchantBankAccount.getCprNumber()) && user.getUser().getFirstName().equals(merchantBankAccount.getFirstName()) && user.getUser().getLastName().equals(merchantBankAccount.getLastName())) {
                 try {
                     bankService.retireAccount(user.getAccountId());
                 } catch (BankServiceException_Exception e) {
@@ -69,7 +70,7 @@ public class SoapBankStepDef {
 
     @Given("a customer with CPR Number {string}")
     public void a_customer_with_cpr_number(String string) {
-        customerBankAccount.getUser().setCprNumber(string);
+        customerBankAccount.setCprNumber(string);
 //        var x = bankService.getAccounts();
 //        System.out.println(x);
     }
@@ -89,8 +90,8 @@ public class SoapBankStepDef {
     public void the_customer_should_exist() {
         var customers = bankService.getAccounts();
         for (var user : customers) {
-            if (user.getUser().getCprNumber().equals(customerBankAccount.getUser().getCprNumber()) && user.getUser().getFirstName().equals(customerBankAccount.getUser().getFirstName()) && user.getUser().getLastName().equals(customerBankAccount.getUser().getLastName())) {
-                customerBankAccount.setAccountId(user.getAccountId());
+            if (user.getUser().getCprNumber().equals(customerBankAccount.getCprNumber()) && user.getUser().getFirstName().equals(customerBankAccount.getFirstName()) && user.getUser().getLastName().equals(customerBankAccount.getLastName())) {
+                customerBankAccount.setBankId(UUID.fromString(user.getAccountId()));
                 assertTrue(true);
                 return;
             }
@@ -145,7 +146,7 @@ public class SoapBankStepDef {
     @Then("the customer should not exist")
     public void theCustomerShouldNotExist() {
         for (var user : customers) {
-            if (user.getUser().getCprNumber().equals(customerBankAccount.getUser().getCprNumber()) && user.getUser().getFirstName().equals(customerBankAccount.getUser().getFirstName()) && user.getUser().getLastName().equals(customerBankAccount.getUser().getLastName())) {
+            if (user.getUser().getCprNumber().equals(customerBankAccount.getCprNumber()) && user.getUser().getFirstName().equals(customerBankAccount.getFirstName()) && user.getUser().getLastName().equals(customerBankAccount.getLastName())) {
                 assertTrue(true);
                 return;
             }
@@ -162,8 +163,8 @@ public class SoapBankStepDef {
     public void thatTheCustomerIsRegisteredWithDTUPay() {
         customers = simpleDTUPayService.getFastmoneyUsers();
         for (var user : customers) {
-            if (user.getUser().getCprNumber().equals(customerBankAccount.getUser().getCprNumber()) && user.getUser().getFirstName().equals(customerBankAccount.getUser().getFirstName()) && user.getUser().getLastName().equals(customerBankAccount.getUser().getLastName())) {
-                customerBankAccount.setAccountId(user.getAccountId());
+            if (user.getUser().getCprNumber().equals(customerBankAccount.getCprNumber()) && user.getUser().getFirstName().equals(customerBankAccount.getFirstName()) && user.getUser().getLastName().equals(customerBankAccount.getLastName())) {
+                customerBankAccount.setBankId(UUID.fromString(user.getAccountId()));
                 customerRegistered = true;
             }
         }
@@ -179,8 +180,8 @@ public class SoapBankStepDef {
     public void thatTheMerchantIsRegisteredWithDTUPay() {
         customers = bankService.getAccounts();
         for (var user : customers) {
-            if (user.getUser().getCprNumber().equals(merchantBankAccount.getUser().getCprNumber()) && user.getUser().getFirstName().equals(merchantBankAccount.getUser().getFirstName()) && user.getUser().getLastName().equals(merchantBankAccount.getUser().getLastName())) {
-                merchantBankAccount.setAccountId(user.getAccountId());
+            if (user.getUser().getCprNumber().equals(merchantBankAccount.getCprNumber()) && user.getUser().getFirstName().equals(merchantBankAccount.getFirstName()) && user.getUser().getLastName().equals(merchantBankAccount.getLastName())) {
+                merchantBankAccount.setBankId(UUID.fromString(user.getAccountId()));
                 merchantRegistered = true;
             }
         }

@@ -5,8 +5,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.xml.bind.annotation.XmlRootElement;
-import java.math.BigDecimal;
-import java.util.UUID;
 
 @XmlRootElement // Needed for XML serialization and deserialization
 @Data // Automatic getter and setters and equals etc
@@ -14,7 +12,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class SimpleDTUPayLedger {
     private int transactionId;
-    private UUID payer;
-    private UUID payee;
+    private SimpleDTUPayUser payer;
+    private SimpleDTUPayUser payee;
     private int transactionAmount;
 }

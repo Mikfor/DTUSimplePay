@@ -14,9 +14,4 @@ public class SimpleDTUPay {
     private int amount;
     private String cid;
     private String mid;
-
-
-    public boolean pay(int amount, String cid, String mid) {
-        return true;
-    }
 }
