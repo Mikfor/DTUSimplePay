@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @XmlRootElement // Needed for XML serialization and deserialization
 @Data // Automatic getter and setters and equals etc
@@ -13,7 +14,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class SimpleDTUPayLedger {
     private int transactionId;
-    private String payer;
-    private String payee;
-    private BigDecimal transactionAmount;
+    private UUID payer;
+    private UUID payee;
+    private int transactionAmount;
 }

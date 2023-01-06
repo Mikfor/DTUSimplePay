@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 public class SimpleDTUPayService {
     // INTERNAL SERVICE VARIABLES
@@ -28,15 +29,27 @@ public class SimpleDTUPayService {
         if(customer.getAccountId().startsWith("m") || merchant.getAccountId().startsWith("c")) {
             throw new IllegalArgumentException("customer with id "+merchant+" is unknown");
         }
-        SimpleDTUPayLedger simpleDTUPayLedger = new SimpleDTUPayLedger(generateId(), customer.getAccountId(), merchant.getAccountId(), new BigDecimal(amount));
+        SimpleDTUPayLedger simpleDTUPayLedger = new SimpleDTUPayLedger(generateId(), UUID.fromString(customer.getAccountId()), UUID.fromString(merchant.getAccountId()), amount);
         try {
-            bankService.transferMoneyFromTo(customer.getAccountId(), merchant.getAccountId(), new BigDecimal(amount), "DTUPay transaction");
+            bankService.transferMoneyFromTo(customer.getAccountId(), merchant.getAccountId(), BigDecimal.valueOf(amount), "DTUPay transaction");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
 
         transactions.put(generateId(), simpleDTUPayLedger);
         return true;
+    }
+
+    public void initiateTransaction(int amount, SimpleDTUPayLedger simpleDTUPayLedger) {
+        // check if customer exists in bank service
+        try {
+            var customerAccount = bankService.getAccount(simpleDTUPayLedger.getPayer().toString());
+            var merchantAccount = bankService.getAccount(simpleDTUPayLedger.getPayee().toString());
+            transaction(amount, customerAccount, merchantAccount);
+        } catch (BankServiceException_Exception e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     public HashMap<Integer, SimpleDTUPayLedger> getTransactions() {
