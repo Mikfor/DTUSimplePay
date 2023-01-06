@@ -1,10 +1,5 @@
 package com.example;
 
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
-import java.util.HashMap;
-
-
 //@Path(("/simpleDTUPay"))
 //public class SimpleDTUPayResource {
 //

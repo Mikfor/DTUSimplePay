@@ -1,6 +1,5 @@
 import com.example.SimpleDTUPayService;
 import com.example.SimpleDTUPayUser;
-import dtu.ws.fastmoney.*;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.en.And;
@@ -9,7 +8,6 @@ import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 

@@ -21,10 +21,6 @@ public class SimpleDTUPayService implements ExternalBankService {
         System.out.println("SimpleDTUPayService Created");
     }
 
-//    public boolean transaction(int amount, SimpleDTUPayUser customer, SimpleDTUPayUser merchant) {
-//        return true;
-//    }
-
     public void initiateTransaction(int amount, String payerId, String payeeId) {
         // check if customer exists in bank service
         try {
@@ -67,15 +63,6 @@ public class SimpleDTUPayService implements ExternalBankService {
         } catch (BankServiceException_Exception e) {
             throw new RuntimeException(e);
         }
-
-    }
-
-    public HashMap<Integer, SimpleDTUPayLedger> getTransactions() {
-        return transactions;
-    }
-
-    public HashMap<String, SimpleDTUPayUser> getUsers() {
-        return users;
     }
 
     @Override
@@ -150,14 +137,9 @@ public class SimpleDTUPayService implements ExternalBankService {
         return transactions.size() + 1;
     }
 
-//    public List<AccountInfo> getFastmoneyUsers() {
-//        return bankService.getAccounts();
-//    }
-
-//    public void createCustomer(String firstName, String lastName, String cprNumber, BigDecimal balance) {
-//    }
 
     public boolean doesFastmoneyUserExist(String user_uuid) {
+        // TODO: I think this is a missing API?
         try {
             bankService.getAccount(user_uuid);
             return true;
@@ -165,23 +147,4 @@ public class SimpleDTUPayService implements ExternalBankService {
             throw new NotFoundException(e);
         }
     }
-
-
-//    public boolean getRegistrationCustomer(String cprNumber) {
-//        for (SimpleDTUPay transaction : transactions.values()) {
-//            if (transaction.getCid().equals(cprNumber)) {
-//                return true;
-//            }
-//        }
-//        return false;
-//    }
-//
-//    public boolean getRegistrationMerchant(String cprNumber) {
-//        for (SimpleDTUPay transaction : transactions.values()) {
-//            if (transaction.getMid().equals(cprNumber)) {
-//                return true;
-//            }
-//        }
-//        return false;
-//    }
 }
