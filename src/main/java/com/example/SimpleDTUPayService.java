@@ -1,150 +1,91 @@
 package com.example;
 
-import dtu.ws.fastmoney.*;
-
-import javax.ws.rs.NotFoundException;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
 
-public class SimpleDTUPayService implements ExternalBankService {
+public class SimpleDTUPayService {
     // INTERNAL SERVICE VARIABLES
+    private final SimpleDTUPayExternalBankServiceAdapter simpleDTUPayExternalBankServiceAdapter = new SimpleDTUPayExternalBankServiceAdapter();
     HashMap<Integer, SimpleDTUPayLedger> transactions = new HashMap<>();
     HashMap<String, SimpleDTUPayUser> users = new HashMap<>();
 
     // EXTERNAL VARIABLES
-    private BankService bankService = new BankServiceService().getBankServicePort();
+    // private BankService bankService = new BankServiceService().getBankServicePort();
+
+    /* TODO
+    * User Registration API
+    * 1. Check if user exists with external bank service
+    * 2. If user does not exist, throw an error that they are not registered
+    * 3. If user exists, create a new user in our system with the returned information for the class
+     */
 
     public SimpleDTUPayService() {
         System.out.println("SimpleDTUPayService Created");
     }
 
+    public void registerUser(String bankId) {
+        // Check if user exists with external bank service
+        var bankUser = simpleDTUPayExternalBankServiceAdapter.getBankUser(bankId);
+        if (bankUser.getBankId() == null) {
+            // I'm still not sure about this part here; something about this code feels wrong
+            throw new RuntimeException("User does not exist in external bank service");
+        }
+        // If user exists, create a new user in our system with the returned information for the class
+        users.put(bankId, bankUser);
+        // log that the user was registered
+        System.out.println("User " + bankId + " was registered with SimpleDTUPay");
+    }
+
     public void initiateTransaction(int amount, String payerId, String payeeId) {
         // check if customer exists in bank service
-        try {
-            // check that payer and payee exists in our system
-            if (!users.containsKey(payerId) ) {
-                // if not, query the bank service for the customer
-                var payerAccount = bankService.getAccount(payerId);
-                // create a new customer object
-                var payer = new SimpleDTUPayUser(UUID.fromString(payerAccount.getId()), payerAccount.getBalance(), payerAccount.getUser().getFirstName(), payerAccount.getUser().getLastName(), payerAccount.getUser().getCprNumber());
-                // add the customer to our system
-                users.put(payer.getBankId().toString(), payer);
-            }
-            if (!users.containsKey(payeeId)) {
-                // if not, query the bank service for the customer
-                var payeeAccount = bankService.getAccount(payeeId);
-                // create a new customer object
-                var payee = new SimpleDTUPayUser(UUID.fromString(payeeAccount.getId()), payeeAccount.getBalance(), payeeAccount.getUser().getFirstName(), payeeAccount.getUser().getLastName(), payeeAccount.getUser().getCprNumber());
-                // add the customer to our system
-                users.put(payee.getBankId().toString(), payee);
-            }
-            // get the customer from our system
-            var payer = users.get(payerId);
-            var payee = users.get(payeeId);
+        // check that payer and payee exists in our system
+        if (!users.containsKey(payerId) ) {
+            // if not, query the bank service for the customer
+            var payer = simpleDTUPayExternalBankServiceAdapter.getBankUser(payerId);
+            // add the customer to our system
+            users.put(payer.getBankId().toString(), payer);
+        }
+        if (!users.containsKey(payeeId)) {
+            // if not, query the bank service for the customer
+            var payee = simpleDTUPayExternalBankServiceAdapter.getBankUser(payeeId);
+            // add the customer to our system
+            users.put(payee.getBankId().toString(), payee);
+        }
+        // get the customer from our system
+        var payer = users.get(payerId);
+        var payee = users.get(payeeId);
 
-            // validate that payer has enough money
-            if (payer.getBalance().compareTo(BigDecimal.valueOf(amount)) < 0) {
-                throw new RuntimeException("Payer does not have enough money");
-            }
-            // check that payer and payee is not the same
-            if (payer.getBankId().toString().equals(payeeId)) {
-                throw new RuntimeException("Payer and payee is the same");
-            }
-            // conduct the transaction
-            if(transferMoney(payer.getBankId().toString(), payee.getBankId().toString(), amount)) {
-                // create a new transaction object
-                var transaction = new SimpleDTUPayLedger(generateId(), payer, payee, amount);
-                // add the transaction to our system
-                transactions.put(transaction.getTransactionId(), transaction);
-            }
-        } catch (BankServiceException_Exception e) {
-            throw new RuntimeException(e);
+        // validate that payer has enough money
+        if (payer.getBalance().compareTo(BigDecimal.valueOf(amount)) < 0) {
+            throw new RuntimeException("Payer does not have enough money");
+        }
+        // check that payer and payee is not the same
+        if (payer.getBankId().toString().equals(payeeId)) {
+            throw new RuntimeException("Payer and Payee is the same");
+        }
+        // conduct the transaction
+        if(simpleDTUPayExternalBankServiceAdapter.transferMoney(payer.getBankId().toString(), payee.getBankId().toString(), amount)) {
+            // create a new transaction object
+            var transaction = new SimpleDTUPayLedger(generateId(), payer, payee, amount);
+            // add the transaction to our system
+            transactions.put(transaction.getTransactionId(), transaction);
+            // update the balance of the payer and payee
+            payer.setBalance(payer.getBalance().subtract(BigDecimal.valueOf(amount)));
+            payee.setBalance(payee.getBalance().add(BigDecimal.valueOf(amount)));
         }
     }
 
-    @Override
-    public SimpleDTUPayUser getBankUser(String bankId) {
-        return null;
-    }
-
-    @Override
-    public List<SimpleDTUPayUser> getBankUsers() {
-        // converts the bank users to our users
-        List<AccountInfo> bankUsers = bankService.getAccounts();
-        List<SimpleDTUPayUser> simpleDTUPayUsers = new ArrayList<>();
-        // create new list of SimpleDTUPayUsers from bankUsers
-        for(AccountInfo bankUser : bankUsers) {
-            try {
-                var detailedBankUser = bankService.getAccount(bankUser.getAccountId());
-                var user = new SimpleDTUPayUser(UUID.fromString(detailedBankUser.getId()), detailedBankUser.getBalance(), detailedBankUser.getUser().getFirstName(), detailedBankUser.getUser().getLastName(), detailedBankUser.getUser().getCprNumber());
-                simpleDTUPayUsers.add(user);
-            } catch (BankServiceException_Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        return simpleDTUPayUsers;
-    }
-
-    @Override
-    public String createAccountWithBalance(SimpleDTUPayUser user, BigDecimal balance) {
-        // Just because of the API, we need to use the service's user object
-        var bankUser = new User();
-        bankUser.setFirstName(user.getFirstName());
-        bankUser.setLastName(user.getLastName());
-        bankUser.setCprNumber(user.getCprNumber());
-
-        try {
-            return bankService.createAccountWithBalance(bankUser, balance);
-        } catch (BankServiceException_Exception e) {
-            throw new RuntimeException(e);
-        }
-
-    }
-
-    @Override
-    public void retireAccount(String bankId) {
-        // retire the account from the external bank service
-        try {
-            bankService.retireAccount(bankId);
-        } catch (BankServiceException_Exception e) {
-            throw new RuntimeException(e);
-        }
-        // remove the account from our system
-        users.remove(bankId);
-    }
-
-    @Override
-    public boolean transferMoney(String fromBankId, String toBankId, int amount) throws RuntimeException {
-        // Wraps the transferMoney method from the bank service
-        try {
-            bankService.transferMoneyFromTo(fromBankId, toBankId, BigDecimal.valueOf(amount), "DTUPay transaction");
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-        return true;
-    }
 
     public SimpleDTUPayUser getUser(String accountId) {
         return users.get(accountId);
     }
 
-    public int generateId() {
-        return transactions.size() + 1;
+    public HashMap<Integer, SimpleDTUPayLedger> getTransactions() {
+        return transactions;
     }
 
-
-    public boolean doesFastmoneyUserExist(String user_uuid) {
-        // TODO: I think this is a missing API?
-        try {
-            bankService.getAccount(user_uuid);
-            return true;
-        } catch (BankServiceException_Exception e) {
-            throw new NotFoundException(e);
-        }
+    // Helper function to generate a "unique" id for the list of transactions
+    public int generateId() {
+        return transactions.size() + 1;
     }
 }

@@ -1,4 +1,4 @@
-import com.example.SimpleDTUPayService;
+import com.example.SimpleDTUPayExternalBankServiceAdapter;
 import com.example.SimpleDTUPayUser;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
@@ -15,8 +15,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class SoapBankStepDef {
     private List<SimpleDTUPayUser> customers;
+
+    // The Setup and Teardown sections, I think, should reference the external bank service directly. It's confusing,
+    // but I suppose it makes some sense?
 //    private BankService bankService = new BankServiceService().getBankServicePort();
-    private SimpleDTUPayService simpleDTUPayService = new SimpleDTUPayService();
+    private SimpleDTUPayExternalBankServiceAdapter simpleDTUPayExternalBankServiceAdapter = new SimpleDTUPayExternalBankServiceAdapter();
 //    private AccountInfo customerBankAccount = new AccountInfo();
 //    private AccountInfo merchantBankAccount = new AccountInfo();
     private SimpleDTUPayUser customerBankAccount = new SimpleDTUPayUser();
@@ -48,13 +51,13 @@ public class SoapBankStepDef {
     @After
     public void tearDown() {
         // TODO: Might be a better way to cleanup our created accounts, BUT TOO BAD
-        var customers = simpleDTUPayService.getBankUsers();
+        var customers = simpleDTUPayExternalBankServiceAdapter.getBankUsers();
         for (var user : customers) {
             if (user.getCprNumber().equals(customerBankAccount.getCprNumber()) && user.getFirstName().equals(customerBankAccount.getFirstName()) && user.getLastName().equals(customerBankAccount.getLastName())) {
-                simpleDTUPayService.retireAccount(user.getBankId().toString());
+                simpleDTUPayExternalBankServiceAdapter.retireAccount(user.getBankId().toString());
             }
             if (user.getCprNumber().equals(merchantBankAccount.getCprNumber()) && user.getFirstName().equals(merchantBankAccount.getFirstName()) && user.getLastName().equals(merchantBankAccount.getLastName())) {
-                simpleDTUPayService.retireAccount(user.getBankId().toString());
+                simpleDTUPayExternalBankServiceAdapter.retireAccount(user.getBankId().toString());
             }
         }
     }
@@ -70,12 +73,12 @@ public class SoapBankStepDef {
     @When("the customer is created in the SOAP Bank Service")
     public void the_customer_is_created_in_the_soap_bank_service() {
         // TODO: Ask Hubert why the service returns an exception but still creates the account
-        simpleDTUPayService.createAccountWithBalance(customerBankAccount, BigDecimal.ZERO);
+        simpleDTUPayExternalBankServiceAdapter.createAccountWithBalance(customerBankAccount, BigDecimal.ZERO);
     }
 
     @Then("the customer should exist")
     public void the_customer_should_exist() {
-        var customers = simpleDTUPayService.getBankUsers();
+        var customers = simpleDTUPayExternalBankServiceAdapter.getBankUsers();
         for (var user : customers) {
             if (user.getCprNumber().equals(customerBankAccount.getCprNumber()) && user.getFirstName().equals(customerBankAccount.getFirstName()) && user.getLastName().equals(customerBankAccount.getLastName())) {
                 customerBankAccount.setBankId(UUID.fromString(user.getBankId().toString()));
@@ -87,7 +90,7 @@ public class SoapBankStepDef {
 
     @When("the bank service is queried for the customer")
     public void theBankServiceIsQueriedForTheCustomer() {
-        customers = simpleDTUPayService.getBankUsers();
+        customers = simpleDTUPayExternalBankServiceAdapter.getBankUsers();
     }
 
     @Then("the customer should not exist")
@@ -104,12 +107,12 @@ public class SoapBankStepDef {
     @Given("a customer with a bank account with balance {int}")
     public void aCustomerWithABankAccountWithBalance(int arg0) {
         customerBankAccount.setBalance(BigDecimal.valueOf(arg0));
-        simpleDTUPayService.createAccountWithBalance(customerBankAccount, customerBankAccount.getBalance());
+        simpleDTUPayExternalBankServiceAdapter.createAccountWithBalance(customerBankAccount, customerBankAccount.getBalance());
     }
 
     @And("that the customer is registered with DTU Pay")
     public void thatTheCustomerIsRegisteredWithDTUPay() {
-        customers = simpleDTUPayService.getBankUsers();
+        customers = simpleDTUPayExternalBankServiceAdapter.getBankUsers();
         for (var user : customers) {
             if (user.getCprNumber().equals(customerBankAccount.getCprNumber()) && user.getFirstName().equals(customerBankAccount.getFirstName()) && user.getLastName().equals(customerBankAccount.getLastName())) {
                 customerBankAccount.setBankId(UUID.fromString(user.getBankId().toString()));
@@ -121,12 +124,12 @@ public class SoapBankStepDef {
 
     @Given("a merchant with a bank account with balance {int}")
     public void aMerchantWithABankAccountWithBalance(int arg0) {
-        simpleDTUPayService.createAccountWithBalance(merchantBankAccount, BigDecimal.valueOf(arg0));
+        simpleDTUPayExternalBankServiceAdapter.createAccountWithBalance(merchantBankAccount, BigDecimal.valueOf(arg0));
     }
 
     @And("that the merchant is registered with DTU Pay")
     public void thatTheMerchantIsRegisteredWithDTUPay() {
-        customers = simpleDTUPayService.getBankUsers();
+        customers = simpleDTUPayExternalBankServiceAdapter.getBankUsers();
         for (var user : customers) {
             if (user.getCprNumber().equals(merchantBankAccount.getCprNumber()) && user.getFirstName().equals(merchantBankAccount.getFirstName()) && user.getLastName().equals(merchantBankAccount.getLastName())) {
                 merchantBankAccount.setBankId(UUID.fromString(user.getBankId().toString()));
@@ -140,7 +143,7 @@ public class SoapBankStepDef {
     public void theMerchantStartsAPaymentForKrByTheCustomer(int arg0) {
         // I...think this needs refactoring
         try {
-            assertTrue(simpleDTUPayService.transferMoney(merchantBankAccount.getBankId().toString(), customerBankAccount.getBankId().toString(), arg0));
+            assertTrue(simpleDTUPayExternalBankServiceAdapter.transferMoney(merchantBankAccount.getBankId().toString(), customerBankAccount.getBankId().toString(), arg0));
         } catch (Exception e) {
             errorMessageHolder.setErrorMessage(e.getMessage());
         }
@@ -151,15 +154,15 @@ public class SoapBankStepDef {
         assertNull(errorMessageHolder.getErrorMessage());
     }
 
+    // FIXME: The issue now, is that our service needs to have an API that calls the Adapter, and not directly calling the
+    // adapter from here.
     @Then("the balance of the customer at the bank is {int} kr")
     public void the_balance_of_the_customer_at_the_bank_is_kr(Integer int1) {
-        // Write code here that turns the phrase above into concrete actions
-        throw new io.cucumber.java.PendingException();
+        assertEquals(int1, customerBankAccount.getBalance().intValue());
     }
 
     @Then("the balance of the merchant at the bank is {int} kr")
     public void the_balance_of_the_merchant_at_the_bank_is_kr(Integer int1) {
-        // Write code here that turns the phrase above into concrete actions
-        throw new io.cucumber.java.PendingException();
+        assertEquals(int1, merchantBankAccount.getBalance().intValue());
     }
 }
